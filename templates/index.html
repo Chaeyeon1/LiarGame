@@ -34,6 +34,10 @@
         'http://' + document.domain + ':' + location.port
       );
 
+      socket.on('connect_error', function (err) {
+        console.log('Connection error: ', err);
+      });
+
       function joinGame() {
         var playerName = document.getElementById('player_name').value;
         socket.emit('join_game', playerName);
