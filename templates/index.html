@@ -11,11 +11,18 @@
     <div id="game_area">
       <input id="player_name" placeholder="이름을 입력하세요" />
       <button onclick="joinGame()">게임 참여</button>
+
+      <!-- 플레이어 목록 표시 영역 -->
+      <h2>현재 방에 있는 플레이어들:</h2>
+      <ul id="player_list"></ul>
+
       <div id="game_status"></div>
+
       <div id="hint_area" style="display: none">
         <input id="hint" placeholder="힌트를 입력하세요" />
         <button onclick="submitHint()">힌트 제출</button>
       </div>
+
       <div id="guess_area" style="display: none">
         <input id="guess" placeholder="라이어를 추측하세요" />
         <button onclick="guessLiar()">추측 제출</button>
@@ -31,6 +38,16 @@
         var playerName = document.getElementById('player_name').value;
         socket.emit('join_game', playerName);
       }
+
+      // 서버에서 현재 방에 있는 플레이어 목록을 업데이트 받음
+      socket.on('update_player_list', function (data) {
+        var playerList = data.players;
+        var playerListHtml = '';
+        for (var i = 0; i < playerList.length; i++) {
+          playerListHtml += '<li>' + playerList[i] + '</li>';
+        }
+        document.getElementById('player_list').innerHTML = playerListHtml;
+      });
 
       socket.on('topic_info', function (data) {
         document.getElementById('game_status').innerHTML =

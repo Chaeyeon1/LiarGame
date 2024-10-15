@@ -2,15 +2,17 @@ from flask import Flask, render_template, request
 from flask_socketio import SocketIO, send, emit
 import random
 
+# Flask 및 Flask-SocketIO 설정
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode='eventlet')
 
+# 게임 관련 변수 초기화
 topics = ["과일", "동물", "나라", "영화", "색깔", "운동", "도시"]
 players = {}
 liar = None
 topic = None
-hints_submitted = 0  # 제출된 힌트 수를 카운트
+hints_submitted = 0  # 제출된 힌트 수 카운트
 total_players = 4    # 참여할 플레이어 수
 guesses_submitted = 0  # 추측한 플레이어 수
 
@@ -25,8 +27,11 @@ def handle_join_game(player_name):
     # 새로운 플레이어를 플레이어 목록에 추가하고 소켓 ID 저장
     players[request.sid] = player_name
 
+    # 모든 플레이어들에게 현재 방에 있는 플레이어 목록을 전송
+    emit('update_player_list', {'players': list(players.values())}, broadcast=True)
+
+    # 플레이어가 다 모이면 라이어와 주제를 설정
     if len(players) == total_players:
-        # 플레이어가 다 모이면 라이어와 주제를 설정
         liar = random.choice(list(players.values()))
         topic = random.choice(topics)
         hints_submitted = 0  # 힌트 제출 수 초기화
@@ -72,5 +77,15 @@ def handle_guess(data):
     if guesses_submitted == total_players:
         send("게임이 종료되었습니다. 모두 고생하셨습니다!", broadcast=True)
 
+@socketio.on('disconnect')
+def handle_disconnect():
+    # 플레이어가 연결을 끊을 때 목록에서 제거
+    if request.sid in players:
+        del players[request.sid]
+        # 남아있는 플레이어들에게 업데이트된 목록을 전송
+        emit('update_player_list', {'players': list(players.values())}, broadcast=True)
+
 if __name__ == '__main__':
+    # eventlet을 사용하여 WebSocket 통신을 처리
     socketio.run(app, host='0.0.0.0', port=65432)
+    # socketio.run(app, host='127.0.0.1', port=65432)
