@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>라이어 게임</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+  </head>
+  <body>
+    <h1>라이어 게임</h1>
+    <div id="game_area">
+      <input id="player_name" placeholder="이름을 입력하세요" />
+      <button onclick="joinGame()">게임 참여</button>
+      <div id="game_status"></div>
+      <div id="hint_area" style="display: none">
+        <input id="hint" placeholder="힌트를 입력하세요" />
+        <button onclick="submitHint()">힌트 제출</button>
+      </div>
+      <div id="guess_area" style="display: none">
+        <input id="guess" placeholder="라이어를 추측하세요" />
+        <button onclick="guessLiar()">추측 제출</button>
+      </div>
+    </div>
+
+    <script>
+      var socket = io.connect(
+        'http://' + document.domain + ':' + location.port
+      );
+
+      function joinGame() {
+        var playerName = document.getElementById('player_name').value;
+        socket.emit('join_game', playerName);
+      }
+
+      socket.on('topic_info', function (data) {
+        document.getElementById('game_status').innerHTML =
+          '주제: ' + data.topic;
+        document.getElementById('hint_area').style.display = 'block';
+      });
+
+      socket.on('liar_info', function () {
+        document.getElementById('game_status').innerHTML =
+          '당신은 라이어입니다. 주제를 모릅니다!';
+        document.getElementById('hint_area').style.display = 'block';
+      });
+
+      function submitHint() {
+        var playerName = document.getElementById('player_name').value;
+        var hint = document.getElementById('hint').value;
+        socket.emit('submit_hint', { player: playerName, hint: hint });
+      }
+
+      socket.on('start_guessing', function () {
+        document.getElementById('hint_area').style.display = 'none';
+        document.getElementById('guess_area').style.display = 'block';
+      });
+
+      function guessLiar() {
+        var guess = document.getElementById('guess').value;
+        socket.emit('guess_liar', { guess: guess });
+      }
+
+      socket.on('message', function (msg) {
+        document.getElementById('game_status').innerHTML +=
+          '<p>' + msg + '</p>';
+      });
+    </script>
+  </body>
+</html>
