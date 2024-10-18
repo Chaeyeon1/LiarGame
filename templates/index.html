@@ -27,11 +27,11 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: space-between;
+        justify-content: space-evenly;
       }
 
       img {
-        width: 100%; /* 이미지 폭을 컨테이너에 맞게 조절 */
+        width: 80%; /* 이미지 폭을 컨테이너에 맞게 조절 */
         height: auto; /* 비율 유지 */
       }
 
@@ -84,7 +84,7 @@
         src="{{ url_for('static', filename='liar_logo.svg') }}"
         alt="로고 이미지"
       /> -->
-      <img src="../static/liar_logo.svg" />
+      <img src="../static/liar_only_logo.svg" />
       <div id="room_area">
         <button class="btn btn-primary" id="openCreateRoomModal">
           방 생성
